@@ -40,4 +40,6 @@
 
     <!--  Start mission-->
     <node pkg="turtlebot3_autorace_core" type="core_node_mission" name="core_node_mission" output="screen"/>
+
+    <node pkg="autorace_host" type="start.py" name="test" output="screen"/>
 </launch>
