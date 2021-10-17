@@ -31,6 +31,8 @@
               args="/camera/rgb/camera_info /camera/camera_info"/>
     </group>
 
+
+
     <!-- image rectification -->
     <node ns="camera" pkg="image_proc" type="image_proc" name="image_proc" args="_approximate_sync:=true"
           output="screen">
@@ -39,7 +41,7 @@
     </node>
 
     <!--  Start mission-->
-    <node pkg="turtlebot3_autorace_core" type="core_node_mission" name="core_node_mission" output="screen"/>
+<!--    <node pkg="turtlebot3_autorace_core" type="core_node_mission" name="core_node_mission" output="screen"/>-->
 
     <node pkg="autorace_host" type="start.py" name="test" output="screen"/>
 </launch>
