@@ -4,10 +4,10 @@ detect:
     red:
       hue_l: 0
       hue_h: 20
-      saturation_l: 248
+      saturation_l: 240
       saturation_h: 255
       lightness_l: 90
-      lightness_h: 250
+      lightness_h: 255
     yellow:
       hue_l: 19
       hue_h: 33
