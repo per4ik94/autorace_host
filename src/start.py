@@ -2,30 +2,43 @@
 import roslib
 import rospy
 import os
+
+import std_msgs.msg
 from std_msgs.msg import UInt8
 
-pub_decided_mode = rospy.Publisher('/core/decided_mode', UInt8)
 
+class Start():
+    pub_decided_mode = rospy.Publisher('/detect/traffic_light', UInt8, queue_size=1)
 
-def controller(msg):
-    pass
-    print(msg.data)
-    # os.system('rostopic pub -1 /core/decided_mode std_msgs/UInt8 "data: 2"')
-    pub_decided_mode.publish(msg.data)
+    isPublished = False
 
+    def controller(self, msg):
+        pass
+        print("traffic_light")
+        print(msg)
+        # os.system('rostopic pub -1 /core/decided_mode std_msgs/UInt8 "data: 2"')
+        if not self.isPublished:
+            self.pub_decided_mode.publish(msg)
+            self.isPublished = True
 
-def test(msg):
-    pass
-    print(msg.data)
+    def test(self, msg):
+        pass
+        print("decided_mode")
+        print(msg)
 
+    def subscriber(self):
 
-def subscriber():
-    rospy.init_node('start', anonymous=True)
-    # pub_decided_mode.publish("data: 3")
-    rospy.Subscriber('/detect/traffic_light', UInt8, controller, queue_size=1)
-    rospy.Subscriber('/core/decided_mode', UInt8, test, queue_size=1)
-    rospy.spin()
+        # pub_decided_mode.publish("data: 3")
+        rospy.Subscriber('/detect/traffic_light', UInt8, self.controller, queue_size=1)
+        rospy.Subscriber('/core/decided_mode', UInt8, self.test, queue_size=1)
+        rospy.spin()
+
+    def main(self):
+        rospy.spin()
 
 
 if __name__ == '__main__':
-    subscriber()
+    rospy.init_node('start')
+    Start().subscriber()
+
+
