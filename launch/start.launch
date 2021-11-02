@@ -1,11 +1,3 @@
 <launch>
-  <arg name="mission" default="traffic_light" doc="mission type [traffic_light, intersection, construction, parking, level_crossing, tunnel]"/>
-    <node pkg="turtlebot3_autorace_core" type="$(arg mission)_core_node_controller" name="$(arg mission)_core_node_controller" output="screen"/>
-    <node pkg="turtlebot3_autorace_core" type="$(arg mission)_core_mode_decider" name="$(arg mission)_core_mode_decider" output="screen"/>
-
-<!--    <node pkg="turtlebot3_autorace_core" type="intersection_core_node_controller" name="intersection_core_node_controller" output="screen"/>-->
-<!--    <node pkg="turtlebot3_autorace_core" type="intersection_core_mode_decider" name="intersection_core_mode_decider" output="screen"/>-->
-
-
-<!--    <node pkg="turtlebot3_autorace_core" type="core_node_mission" name="core_node_mission" output="screen" />-->
+    <node pkg="autorace_host" type="start_routine.py" name="start_routine" output="screen"/>
 </launch>
