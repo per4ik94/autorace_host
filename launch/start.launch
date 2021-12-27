@@ -1,3 +1,5 @@
 <launch>
+<include file="$(find turtlebot3_autorace_camera)/launch/intrinsic_camera_calibration.launch" />
     <node pkg="autorace_host" type="start_routine.py" name="start_routine" output="screen"/>
+    <node pkg="turtlebot3_autorace_core" type="core_node_mission" name="core_node_mission" output="screen" />
 </launch>

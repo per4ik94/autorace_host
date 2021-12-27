@@ -1,9 +1,6 @@
 #!/usr/bin/env python3
-import roslib
 import rospy, roslaunch
-import subprocess
 import os
-import sys
 from enum import Enum
 from std_msgs.msg import UInt8
 
