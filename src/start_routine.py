@@ -7,10 +7,6 @@ from std_msgs.msg import UInt8
 
 class Start_routine():
     def __init__(self):
-        # Publisher
-        self.pub_traffic_sign = rospy.Publisher('/detect/traffic_sign', UInt8, queue_size=1)
-        self.pub_traffic_light = rospy.Publisher('/detect/traffic_light', UInt8, queue_size=1)
-
         # Enum with launch arguments
         self.Launcher = Enum('Launcher',
                              'launch_detect_lane launch_traffic_light launch_intersection launch_construction '
@@ -37,7 +33,7 @@ class Start_routine():
             self.ros_autorace_host_package_path + "/launch/detect_lane.launch"])
 
         self.isTrafficPublished = False
-        self.sign_detection_counter = 5
+        self.max_sign_detection_value = 5
 
         # Boolean values for the launch status
         self.is_detect_lane_launched = False
@@ -55,7 +51,7 @@ class Start_routine():
         self.is_level_crossing_finished = False
         self.is_tunnel_finished = False
 
-        self.data_count = 0
+        self.sign_detection_counter = 0
 
         # Start routine
         self.launch_mission(self.Launcher.launch_traffic_light.value, True)
@@ -75,7 +71,7 @@ class Start_routine():
 
     def launch_mission(self, mission_num, is_start):
         """
-        Start/Shutdown a launch file with the given mission type.
+        Starts/Shutdowns a node with the given mission type.
         is_start True - Starts launch file
         is_start False - Shutdowns launch file
         """
@@ -84,13 +80,13 @@ class Start_routine():
                 if not self.is_detect_lane_launched:
                     pass
                     self.is_detect_lane_launched = True
-                    self.detect_lane_launch.start()
+                    self.detect_lane_launch.start()  # Starts detect lane node
                 else:
                     pass
             else:
                 if self.is_detect_lane_launched:
                     pass
-                    self.is_detect_lane_launched = False
+                    self.is_detect_lane_launched = False  # Shutdowns detect lane node
                     self.detect_lane_launch.shutdown()
 
                 else:
@@ -100,14 +96,14 @@ class Start_routine():
                 if not self.is_traffic_light_launched:
                     pass
                     self.is_traffic_light_launched = True
-                    self.traffic_light_launch.start()
+                    self.traffic_light_launch.start()  # Starts traffic light node
                 else:
                     pass
             else:
                 if self.is_traffic_light_launched:
                     pass
                     self.is_traffic_light_launched = False
-                    self.traffic_light_launch.shutdown()
+                    self.traffic_light_launch.shutdown()  # Shutdowns traffic light node
 
                 else:
                     pass
@@ -178,58 +174,59 @@ class Start_routine():
                     pass
 
     def detect_traffic_light_controller(self, msg):
-        """"""
+        """Starts the first nodes after the green traffic light phase has been detected"""
         if not self.isTrafficPublished:
-            self.launch_mission(self.Launcher.launch_detect_lane.value, True)
-            self.launch_mission(self.Launcher.launch_traffic_light.value, False)
-            self.launch_mission(self.Launcher.launch_intersection.value, True)
+            self.launch_mission(self.Launcher.launch_detect_lane.value, True)  # Start detect lane node
+            self.launch_mission(self.Launcher.launch_traffic_light.value, False)  # kill traffic light node
+            self.launch_mission(self.Launcher.launch_intersection.value, True)  # Start intersection node
             self.isTrafficPublished = True
 
     def detect_traffic_sign_controller(self, msg):
+        """Control the launched nodes"""
         if not self.is_intersection_finished:
-            if msg.data == 2 or msg.data == 3:
-                self.data_count += 1
-                if self.data_count >= self.sign_detection_counter:
+            if msg.data == 2 or msg.data == 3:  # 2 = left sign; 3 = right sign
+                self.sign_detection_counter += 1  # count how often the sign was detected
+                if self.sign_detection_counter >= self.max_sign_detection_value:
                     self.is_intersection_finished = True
-                    self.data_count = 0
-                    self.launch_mission(self.Launcher.launch_intersection.value, False)
-                    rospy.sleep(62)
-                    self.launch_mission(self.Launcher.launch_construction.value, True)
+                    self.sign_detection_counter = 0  # reset counter
+                    self.launch_mission(self.Launcher.launch_intersection.value, False)  # kill intersection node
+                    rospy.sleep(62)  # wait 62 seconds
+                    self.launch_mission(self.Launcher.launch_construction.value, True)  # Start construction node
         elif not self.is_construction_finished:
-            if msg.data == 1:
-                self.data_count += 1
-                if self.data_count > self.sign_detection_counter:
+            if msg.data == 1:  # 1 = construction sign value
+                self.sign_detection_counter += 1  # count how often the sign was detected
+                if self.sign_detection_counter > self.max_sign_detection_value:
                     self.is_construction_finished = True
-                    self.data_count = 0
-                    self.launch_mission(self.Launcher.launch_construction.value, False)
-                    rospy.sleep(53)
-                    self.launch_mission(self.Launcher.launch_parking.value, True)
+                    self.sign_detection_counter = 0  # reset counter
+                    self.launch_mission(self.Launcher.launch_construction.value, False)  # kill construction node
+                    rospy.sleep(53)  # wait 53 seconds
+                    self.launch_mission(self.Launcher.launch_parking.value, True)  # Start parking node
         elif not self.is_parking_finished:
             if msg.data == 1:
-                self.data_count += 1
-                if self.data_count > self.sign_detection_counter:
+                self.sign_detection_counter += 1  # count how often the sign was detected
+                if self.sign_detection_counter > self.max_sign_detection_value:
                     self.is_parking_finished = True
-                    self.data_count = 0
-                    self.launch_mission(self.Launcher.launch_parking.value, False)
-                    rospy.sleep(60)
-                    self.launch_mission(self.Launcher.launch_level_crossing.value, True)
+                    self.sign_detection_counter = 0  # reset counter
+                    self.launch_mission(self.Launcher.launch_parking.value, False)  # kill parking node
+                    rospy.sleep(60)  # wait 60 seconds
+                    self.launch_mission(self.Launcher.launch_level_crossing.value, True)  # Start level crossing node
         elif not self.is_level_crossing_finished:
             if msg.data == 1:
-                self.data_count += 1
-                if self.data_count > self.sign_detection_counter:
+                self.sign_detection_counter += 1  # count how often the sign was detected
+                if self.sign_detection_counter > self.max_sign_detection_value:
                     self.is_level_crossing_finished = True
-                    self.data_count = 0
-                    self.launch_mission(self.Launcher.launch_level_crossing.value, False)
-                    rospy.sleep(70)
-                    self.launch_mission(self.Launcher.launch_tunnel.value, True)
+                    self.sign_detection_counter = 0  # reset counter
+                    self.launch_mission(self.Launcher.launch_level_crossing.value, False)  # kill level crossing node
+                    rospy.sleep(70)  # wait 70 seconds
+                    self.launch_mission(self.Launcher.launch_tunnel.value, True)  # Start tunnel node
         elif not self.is_tunnel_finished:
             if msg.data == 1:
-                self.data_count += 1
-                if self.data_count > self.sign_detection_counter:
+                self.sign_detection_counter += 1  # count how often the sign was detected
+                if self.sign_detection_counter > self.max_sign_detection_value:
                     self.is_tunnel_finished = True
-                    self.data_count = 0
-                    self.launch_mission(self.Launcher.launch_tunnel.value, False)
-                    self.launch_mission(self.Launcher.launch_detect_lane.value, False)
+                    self.sign_detection_counter = 0  # reset counter
+                    self.launch_mission(self.Launcher.launch_tunnel.value, False)  # kill tunnel node
+                    self.launch_mission(self.Launcher.launch_detect_lane.value, False)  # kill detect lane node
 
     def subscriber(self):
         rospy.Subscriber('/detect/traffic_light', UInt8, self.detect_traffic_light_controller, queue_size=1)
