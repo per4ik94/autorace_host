@@ -1,5 +1,8 @@
 <launch>
+    <!--Starts the extrinsic camera calibration node-->
     <include file="$(find turtlebot3_autorace_camera)/launch/extrinsic_camera_calibration.launch"/>
+    <!--Starts the node that recognizes the lane markings-->
     <include file="$(find turtlebot3_autorace_detect)/launch/detect_lane.launch"/>
+    <!--Starts the node that controls the Turtlebot and aligns it left and right between the lane markings-->
     <include file="$(find turtlebot3_autorace_driving)/launch/turtlebot3_autorace_control_lane.launch"/>
 </launch>

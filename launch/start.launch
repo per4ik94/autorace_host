@@ -1,5 +1,8 @@
 <launch>
-<include file="$(find turtlebot3_autorace_camera)/launch/intrinsic_camera_calibration.launch" />
+    <!--Starts intrinsic camera calibration node-->
+    <include file="$(find turtlebot3_autorace_camera)/launch/intrinsic_camera_calibration.launch"/>
+    <!--Starts the created node that automates the sequence-->
     <node pkg="autorace_host" type="start_routine.py" name="start_routine" output="screen"/>
-    <node pkg="turtlebot3_autorace_core" type="core_node_mission" name="core_node_mission" output="screen" />
+    <!--Starts the node that loads the mission models-->
+    <node pkg="turtlebot3_autorace_core" type="core_node_mission" name="core_node_mission" output="screen"/>
 </launch>

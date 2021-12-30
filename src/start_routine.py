@@ -7,13 +7,14 @@ from std_msgs.msg import UInt8
 
 class Start_routine():
     def __init__(self):
+        # Publisher
         self.pub_traffic_sign = rospy.Publisher('/detect/traffic_sign', UInt8, queue_size=1)
         self.pub_traffic_light = rospy.Publisher('/detect/traffic_light', UInt8, queue_size=1)
-        self.pub_start_routine = rospy.Publisher('/core/decided_mode', UInt8, queue_size=1)
 
         # Enum with launch arguments
         self.Launcher = Enum('Launcher',
-                             'launch_detect_lane launch_traffic_light launch_intersection launch_construction launch_parking launch_level_crossing launch_tunnel')
+                             'launch_detect_lane launch_traffic_light launch_intersection launch_construction '
+                             'launch_parking launch_level_crossing launch_tunnel')
         self.Arguments = Enum('Arguments', 'intersection construction parking level_crossing tunnel')
 
         self.uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
@@ -27,13 +28,18 @@ class Start_routine():
         self.ros_autorace_host_package_path = os.path.dirname(os.path.realpath(__file__))
         self.ros_autorace_host_package_path = self.ros_autorace_host_package_path.replace('autorace_host/src',
                                                                                           'autorace_host/')
-        # Launch files
-        self.traffic_light_launch = roslaunch.parent.ROSLaunchParent(self.uuid, [self.ros_autorace2020_package_path + "turtlebot3_autorace_detect/launch/detect_traffic_light.launch"])
-        self.detect_lane_launch = roslaunch.parent.ROSLaunchParent(self.uuid, [self.ros_autorace_host_package_path + "/launch/detect_lane.launch"])
+        # Traffic light launch file
+        self.traffic_light_launch = roslaunch.parent.ROSLaunchParent(self.uuid, [
+            self.ros_autorace2020_package_path + "turtlebot3_autorace_detect/launch/detect_traffic_light.launch"])
 
+        # Detect lane launch file
+        self.detect_lane_launch = roslaunch.parent.ROSLaunchParent(self.uuid, [
+            self.ros_autorace_host_package_path + "/launch/detect_lane.launch"])
 
         self.isTrafficPublished = False
+        self.sign_detection_counter = 5
 
+        # Boolean values for the launch status
         self.is_detect_lane_launched = False
         self.is_traffic_light_launched = False
         self.is_intersection_launched = False
@@ -42,6 +48,7 @@ class Start_routine():
         self.is_level_crossing_launched = False
         self.is_tunnel_launched = False
 
+        # Boolean values for sign detection status
         self.is_intersection_finished = False
         self.is_construction_finished = False
         self.is_parking_finished = False
@@ -53,10 +60,8 @@ class Start_routine():
         # Start routine
         self.launch_mission(self.Launcher.launch_traffic_light.value, True)
 
-
     def start_detect_sign_launch_mission_with_arguments(self, argument, is_start):
         """ Starts the different detect sign launch files depending on the given argument """
-
         if is_start:
             self.cli_args = [
                 self.ros_autorace2020_package_path + 'turtlebot3_autorace_detect/launch/detect_sign.launch',
@@ -69,9 +74,10 @@ class Start_routine():
             self.parent.shutdown()
 
     def launch_mission(self, mission_num, is_start):
-        """ Start/Shutdown a launch file with the given mission type.
-        is_start True - Start launch file
-        is_start False - Shutdown launch file
+        """
+        Start/Shutdown a launch file with the given mission type.
+        is_start True - Starts launch file
+        is_start False - Shutdowns launch file
         """
         if mission_num == self.Launcher.launch_detect_lane.value:
             if is_start:
@@ -172,7 +178,7 @@ class Start_routine():
                     pass
 
     def detect_traffic_light_controller(self, msg):
-        """ """
+        """"""
         if not self.isTrafficPublished:
             self.launch_mission(self.Launcher.launch_detect_lane.value, True)
             self.launch_mission(self.Launcher.launch_traffic_light.value, False)
@@ -183,25 +189,25 @@ class Start_routine():
         if not self.is_intersection_finished:
             if msg.data == 2 or msg.data == 3:
                 self.data_count += 1
-                if self.data_count >= 5:
+                if self.data_count >= self.sign_detection_counter:
                     self.is_intersection_finished = True
                     self.data_count = 0
                     self.launch_mission(self.Launcher.launch_intersection.value, False)
-                    rospy.sleep(50)
+                    rospy.sleep(62)
                     self.launch_mission(self.Launcher.launch_construction.value, True)
         elif not self.is_construction_finished:
             if msg.data == 1:
-                self.data_count+=1
-                if self.data_count > 5:
+                self.data_count += 1
+                if self.data_count > self.sign_detection_counter:
                     self.is_construction_finished = True
                     self.data_count = 0
                     self.launch_mission(self.Launcher.launch_construction.value, False)
-                    rospy.sleep(50)
+                    rospy.sleep(53)
                     self.launch_mission(self.Launcher.launch_parking.value, True)
         elif not self.is_parking_finished:
             if msg.data == 1:
-                self.data_count +=1
-                if self.data_count > 5:
+                self.data_count += 1
+                if self.data_count > self.sign_detection_counter:
                     self.is_parking_finished = True
                     self.data_count = 0
                     self.launch_mission(self.Launcher.launch_parking.value, False)
@@ -209,22 +215,21 @@ class Start_routine():
                     self.launch_mission(self.Launcher.launch_level_crossing.value, True)
         elif not self.is_level_crossing_finished:
             if msg.data == 1:
-                self.data_count +=1
-                if self.data_count > 0:
+                self.data_count += 1
+                if self.data_count > self.sign_detection_counter:
                     self.is_level_crossing_finished = True
                     self.data_count = 0
                     self.launch_mission(self.Launcher.launch_level_crossing.value, False)
-                    rospy.sleep(60)
+                    rospy.sleep(70)
                     self.launch_mission(self.Launcher.launch_tunnel.value, True)
         elif not self.is_tunnel_finished:
             if msg.data == 1:
-                self.data_count +=1
-                if self.data_count > 5:
+                self.data_count += 1
+                if self.data_count > self.sign_detection_counter:
                     self.is_tunnel_finished = True
                     self.data_count = 0
                     self.launch_mission(self.Launcher.launch_tunnel.value, False)
                     self.launch_mission(self.Launcher.launch_detect_lane.value, False)
-
 
     def subscriber(self):
         rospy.Subscriber('/detect/traffic_light', UInt8, self.detect_traffic_light_controller, queue_size=1)
