@@ -4,5 +4,5 @@
     <!--Starts the created node that automates the sequence-->
     <node pkg="autorace_host" type="start_routine.py" name="start_routine" output="screen"/>
     <!--Starts the node that loads the mission models-->
-    <node pkg="turtlebot3_autorace_core" type="core_node_mission" name="core_node_mission" output="screen"/>
+    <include file="$(find turtlebot3_autorace_core)/launch/turtlebot3_autorace_mission.launch"/>
 </launch>
